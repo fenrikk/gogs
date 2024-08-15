@@ -65,7 +65,7 @@ pipeline {
                         protocol: 'http',
                         nexusUrl: "${NEXUS_URL}",
                         groupId: 'gogs-artifacts',
-                        version: "${env.COMMIT_HASH}",
+                        version: "${env.GIT_COMMIT.take(7)}",
                         repository: "${NEXUS_REPOSITORY}",
                         credentialsId: "${NEXUS_CREDENTIAL_ID}",
                         artifacts: [
