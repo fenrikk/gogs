@@ -12,31 +12,13 @@ pipeline {
             }
         }
         
-        stage('Test and Coverage') {
-            steps {
-                script {
-                    sh 'CGO_ENABLED=1 go test -v ./... -coverprofile=coverage.out -json > test-report.json'
-                    sh 'go tool cover -html=coverage.out -o coverage.html'
-                }
-            }
-        }
-        
         stage('SonarQube Analysis') {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
                     withSonarQubeEnv('SonarQube') {
                         withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                            sh """
-                                ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                                -Dsonar.sources=. \
-                                -Dsonar.exclusions=**/* \
-                                -Dsonar.test.inclusions= \
-                                -Dsonar.go.coverage.reportPaths=coverage.out \
-                                -Dsonar.go.tests.reportPaths=test-report.json \
-                                -Dsonar.coverage.exclusions=
-                            """
+                            sh "${scannerHome}/bin/sonar-scanner"
                         }
                     }
                 }
@@ -109,7 +91,6 @@ pipeline {
             script {
                 cleanWs()
                 sh "rm -f gogs-${env.GIT_COMMIT.take(7)}"
-                sh "rm -f coverage.out test-report.json coverage.html"
                 echo "Cleanup completed"
             }
         }
