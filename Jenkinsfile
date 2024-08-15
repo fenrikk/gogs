@@ -51,14 +51,14 @@ pipeline {
         
         stage('Archive Artifact') {
             steps {
-                archiveArtifacts artifacts: "gogs-${env.COMMIT_HASH}", fingerprint: true
+                archiveArtifacts artifacts: "gogs-${env.GIT_COMMIT.take(7)}", fingerprint: true
             }
         }
         
         stage('Upload to Nexus') {
             steps {
                 script {
-                    def artifactName = "gogs-${env.COMMIT_HASH}"
+                    def artifactName = "gogs-${env.GIT_COMMIT.take(7)}"
                     def latestArtifactName = "gogs-latest"
                     nexusArtifactUploader(
                         nexusVersion: 'nexus3',
