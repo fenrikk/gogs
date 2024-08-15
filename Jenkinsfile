@@ -6,12 +6,6 @@ pipeline {
         go "${GO_VERSION}"
     }
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
         stage('Build') {
             steps {
                 sh "go build -o gogs-${env.GIT_COMMIT.take(7)}"
