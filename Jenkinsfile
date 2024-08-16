@@ -5,10 +5,13 @@ pipeline {
     tools {
         go "${GO_VERSION}"
     }
+    environment {
+        COMMIT_HASH = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+    }
     stages {
         stage('Build') {
             steps {
-                sh "go build -o gogs-${env.GIT_COMMIT.take(7)}"
+                sh "go build -o gogs-${COMMIT_HASH}"
             }
         }
         
@@ -51,21 +54,21 @@ pipeline {
         
         stage('Archive Artifact') {
             steps {
-                archiveArtifacts artifacts: "gogs-${env.GIT_COMMIT.take(7)}", fingerprint: true
+                archiveArtifacts artifacts: "gogs-${COMMIT_HASH}", fingerprint: true
             }
         }
         
         stage('Upload to Nexus') {
             steps {
                 script {
-                    def artifactName = "gogs-${env.GIT_COMMIT.take(7)}"
+                    def artifactName = "gogs-${COMMIT_HASH}"
                     def latestArtifactName = "gogs-latest"
                     nexusArtifactUploader(
                         nexusVersion: 'nexus3',
                         protocol: 'http',
                         nexusUrl: "${NEXUS_URL}",
                         groupId: 'gogs-artifacts',
-                        version: "${env.GIT_COMMIT.take(7)}",
+                        version: "${COMMIT_HASH}",
                         repository: "${NEXUS_REPOSITORY}",
                         credentialsId: "${NEXUS_CREDENTIAL_ID}",
                         artifacts: [
@@ -80,7 +83,7 @@ pipeline {
                         protocol: 'http',
                         nexusUrl: "${NEXUS_URL}",
                         groupId: 'gogs-artifacts',
-                        version: "gogs-latest",
+                        version: "latest",
                         repository: "${NEXUS_REPOSITORY}",
                         credentialsId: "${NEXUS_CREDENTIAL_ID}",
                         artifacts: [
@@ -98,7 +101,7 @@ pipeline {
                     sh """
                         ssh ${ANSIBE_HOST_IP} "cd ${PATH_TO_UPDATE_PLAYBOOK} && \
                         ansible-playbook ${UPDATE_PLAYBOOK_NAME} \
-                        -e 'gogs_version=${env.COMMIT_HASH}'"
+                        -e 'gogs_version=${COMMIT_HASH}'"
                     """
                 }
             }
@@ -108,7 +111,7 @@ pipeline {
         always {
             script {
                 cleanWs()
-                sh "rm -f gogs-${env.GIT_COMMIT.take(7)}"
+                sh "rm -f gogs-${COMMIT_HASH}"
                 sh "rm -f coverage.out test-report.json coverage.html"
                 echo "Cleanup completed"
             }
