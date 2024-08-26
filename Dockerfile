@@ -8,11 +8,29 @@ RUN go build -o gogs
 
 FROM alpine:3.17
 
-RUN apk add --no-cache git ca-certificates
+RUN apk --no-cache --no-progress add \
+  bash \
+  ca-certificates \
+  curl \
+  git \
+  linux-pam \
+  openssh \
+  shadow \
+  socat \
+  tzdata \
+  rsync
 
-RUN mkdir -p /usr/local/bin/gogs
+RUN adduser -D -h /home/git -s /bin/bash git
+
+RUN mkdir -p /usr/local/bin/gogs /gogs-repositories
 WORKDIR /usr/local/bin/gogs
 
 COPY --from=builder /app/gogs .
+
+RUN chown -R git:git /usr/local/bin/gogs /gogs-repositories
+
+USER git
+
+VOLUME /gogs-repositories
 
 CMD ["./gogs", "web"]
