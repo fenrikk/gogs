@@ -18,14 +18,16 @@ RUN apk --no-cache --no-progress add \
   shadow \
   socat \
   tzdata \
-  rsync
+  rsync \
+  gettext
 
 RUN adduser -D -h /home/git -s /bin/bash git
 
-RUN mkdir -p /usr/local/bin/gogs /gogs-repositories
+RUN mkdir -p /usr/local/bin/gogs /gogs-repositories /usr/local/bin/gogs/custom/conf
 WORKDIR /usr/local/bin/gogs
 
 COPY --from=builder /app/gogs .
+COPY docker/app.ini.template /usr/local/bin/gogs/custom/conf/app.ini.template
 
 RUN chown -R git:git /usr/local/bin/gogs /gogs-repositories
 
@@ -33,4 +35,10 @@ USER git
 
 VOLUME /gogs-repositories
 
+COPY docker/create_app_ini.sh /create_app_ini.sh
+USER root
+RUN chmod +x /create_app_ini.sh
+USER git
+
+ENTRYPOINT ["/create_app_ini.sh"]
 CMD ["./gogs", "web"]
