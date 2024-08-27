@@ -2,19 +2,19 @@ pipeline {
     agent {
         label "${AGENT_LABEL}"
     }
-    tools {
-        go "${GO_VERSION}"
-    }
     environment {
         COMMIT_HASH = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
     }
     stages {
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh "go build -o gogs-${COMMIT_HASH}"
+                script {
+                    docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
+                    docker.build("${DOCKER_IMAGE}:latest")
+                }
             }
         }
-        
+
         stage('Test and Coverage') {
             steps {
                 script {
@@ -23,7 +23,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -45,64 +45,20 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Quality Gate') {
             steps {
                 waitForQualityGate abortPipeline: true, webhookSecretId: 'sonar-webhook-secret'
             }
         }
-        
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: "gogs-${COMMIT_HASH}", fingerprint: true
-            }
-        }
-        
-        stage('Upload to Nexus') {
+
+        stage('Push to Nexus') {
             steps {
                 script {
-                    def artifactName = "gogs-${COMMIT_HASH}"
-                    def latestArtifactName = "gogs-latest"
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: "${NEXUS_URL}",
-                        groupId: 'gogs-artifacts',
-                        version: "${COMMIT_HASH}",
-                        repository: "${NEXUS_REPOSITORY}",
-                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
-                        artifacts: [
-                            [artifactId: 'gogs', 
-                             classifier: '', 
-                             file: artifactName]
-                        ]
-                    )
-                    sh "cp ${artifactName} ${latestArtifactName}"
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: "${NEXUS_URL}",
-                        groupId: 'gogs-artifacts',
-                        version: "latest",
-                        repository: "${NEXUS_REPOSITORY}",
-                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
-                        artifacts: [
-                            [artifactId: 'gogs', 
-                             classifier: '', 
-                             file: latestArtifactName]
-                        ]
-                    )
-                }
-            }
-        }
-        stage('Update Gogs') {
-            steps {
-                sshagent(credentials: ['ansible-ssh-key']) {
-                    sh """
-                        ssh ${ANSIBE_HOST_IP} "cd ${PATH_TO_UPDATE_PLAYBOOK} && \
-                        ansible-playbook ${UPDATE_PLAYBOOK_NAME} \
-                        -e 'gogs_version=${COMMIT_HASH}'"
-                    """
+                    docker.withRegistry("http://${DOCKER_REGISTRY}", "${NEXUS_CREDENTIAL_ID}") {
+                        docker.image("${DOCKER_IMAGE}:${COMMIT_HASH}").push()
+                        docker.image("${DOCKER_IMAGE}:latest").push()
+                    }
                 }
             }
         }
@@ -111,7 +67,7 @@ pipeline {
         always {
             script {
                 cleanWs()
-                sh "rm -f gogs-${COMMIT_HASH}"
+                sh "docker rmi ${DOCKER_IMAGE}:${COMMIT_HASH} ${DOCKER_IMAGE}:latest || true"
                 sh "rm -f coverage.out test-report.json coverage.html"
                 echo "Cleanup completed"
             }
