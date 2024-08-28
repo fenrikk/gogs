@@ -5,6 +5,9 @@ pipeline {
     environment {
         COMMIT_HASH = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
     }
+    tools {
+        docker "${DOCKER}"
+    }
     stages {
         stage('Build Docker Image') {
             steps {
