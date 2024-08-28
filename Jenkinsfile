@@ -5,15 +5,14 @@ pipeline {
     environment {
         COMMIT_HASH = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
     }
-    tools {
-        docker 'docker'
-    }
-    stages {
+   stages {
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
-                    docker.build("${DOCKER_IMAGE}:latest")
+                withDockerTool('docker') {
+                    script {
+                        docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
+                        docker.build("${DOCKER_IMAGE}:latest")
+                    }
                 }
             }
         }
