@@ -8,11 +8,9 @@ pipeline {
    stages {
         stage('Build Docker Image') {
             steps {
-                withDockerTool('docker') {
-                    script {
-                        docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
-                        docker.build("${DOCKER_IMAGE}:latest")
-                    }
+                script {
+                    docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
+                    docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
         }
