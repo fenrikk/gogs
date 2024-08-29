@@ -1,17 +1,21 @@
 pipeline {
-  agent {
-    docker {
-      image 'docker:dind'
+    agent {
+        docker {
+            image 'docker:dind'
+        }
     }
-  }
-  stages {
-    steps {
-        script {
-            docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
-            docker.build("${DOCKER_IMAGE}:latest")
+    
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}:${COMMIT_HASH}")
+                    docker.build("${DOCKER_IMAGE}:latest")
+                }
             }
         }
     }
+    
     post {
         always {
             script {
