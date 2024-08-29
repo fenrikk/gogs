@@ -4,7 +4,9 @@ pipeline {
             image 'docker:dind'
         }
     }
-    
+    environment {
+        COMMIT_HASH = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+    }
     stages {
         stage('Build Docker Image') {
             steps {
