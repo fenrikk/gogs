@@ -43,5 +43,29 @@ pipeline {
                 }
             }
         }
+        stage('Update Kubernetes Manifest') {
+            agent {
+                docker {
+                    image 'alpine/git'
+                    args '-u root'
+                }
+            }
+            steps {
+                script {
+                    def commitHash = unstash 'git-info'
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh "git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL.replace('https://', '')} repo"                        
+                        dir('repo') {
+                            sh "sed -i 's|image: $DOCKER_REGISTRY/gogs:.*|image: $DOCKER_REGISTRY/gogs:${commitHash}|' gogs-deployment-service.yaml"
+                            sh "git config user.email 'jenkins@example.com'"
+                            sh "git config user.name 'Jenkins'"
+                            sh "git add gogs-deployment-service.yaml"
+                            sh "git commit -m 'Update Gogs image to ${commitHash}'"
+                            sh "git push origin HEAD:main"
+                        }
+                    }
+                }
+            }
+        }
     }
 }
