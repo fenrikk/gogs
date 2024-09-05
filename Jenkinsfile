@@ -40,19 +40,7 @@ pipeline {
                     sh "docker build -t $DOCKER_REGISTRY/gogs:latest -t $DOCKER_REGISTRY/gogs:${commitHash} ."
                     sh "docker push $DOCKER_REGISTRY/gogs:latest"
                     sh "docker push $DOCKER_REGISTRY/gogs:${commitHash}"
-                }
-            }
-        }
-        stage('Update Kubernetes Manifest') {
-            agent {
-                docker {
-                    image 'alpine/git'
-                    args '-u root'
-                }
-            }
-            steps {
-                script {
-                    def commitHash = unstash 'git-info'
+
                     withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         sh "git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL.replace('https://', '')} repo"                        
                         dir('repo') {
