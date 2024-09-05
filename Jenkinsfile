@@ -33,9 +33,13 @@ pipeline {
                 }
             }
             steps {
-                sh 'dockerd --insecure-registry $DOCKER_REGISTRY &'
-                sh 'docker build -t $DOCKER_REGISTRY/gogs:latest .'
-                sh 'docker push $DOCKER_REGISTRY/gogs:latest'
+                script {
+                    def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    sh 'dockerd --insecure-registry $DOCKER_REGISTRY &'
+                    sh "docker build -t $DOCKER_REGISTRY/gogs:latest -t $DOCKER_REGISTRY/gogs:${commitHash} ."
+                    sh "docker push $DOCKER_REGISTRY/gogs:latest"
+                    sh "docker push $DOCKER_REGISTRY/gogs:${commitHash}"
+                }
             }
         }
     }
