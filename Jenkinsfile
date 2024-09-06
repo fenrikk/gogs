@@ -34,7 +34,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'git config --global --add safe.directory /var/jenkins_home/workspace/test'
+                    sh 'git config --global --add safe.directory /var/jenkins_home/workspace'
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     sh 'dockerd --insecure-registry $DOCKER_REGISTRY &'
                     sh "docker build -t $DOCKER_REGISTRY/gogs:latest -t $DOCKER_REGISTRY/gogs:${commitHash} ."
