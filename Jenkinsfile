@@ -2,12 +2,12 @@ pipeline {
     agent any
     stages {
         stage('Build and Push Docker Image') {
-            // agent {
-            //     docker { 
-            //         image 'docker:dind' 
-            //         args '--privileged -u root'
-            //     }
-            // }
+            agent {
+                docker { 
+                    image 'docker:dind' 
+                    args '--privileged -u root'
+                }
+            }
             steps {
                 script {
                     sh 'git config --global --add safe.directory "${WORKSPACE}"'
