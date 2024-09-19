@@ -37,7 +37,7 @@ pipeline {
                     sh 'git config --global --add safe.directory "${WORKSPACE}"'
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     sh 'dockerd --insecure-registry $DOCKER_REGISTRY &'
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'ecr-admin') {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'ecr:eu-north-1:ecr-admin') {
                         def customImage = docker.build("${DOCKER_REGISTRY}/gogs:${commitHash}")
                         customImage.push()
                         customImage.push('latest')
