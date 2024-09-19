@@ -4,7 +4,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             agent {
                 docker { 
-                    image 'dind-aws-cli:latest' 
+                    image 'docker:dind' 
                     args '--privileged -u root'
                 }
             }
