@@ -5,7 +5,7 @@ pipeline {
             agent {
                 docker { 
                     image 'dind-aws-cli:latest' 
-                    args "--privileged -u root --entrypoint=''"
+                    args '--privileged -u root'
                 }
             }
             steps {
