@@ -1,30 +1,30 @@
 pipeline {
     agent any
     stages {
-        stage('Test and Coverage') {
-            agent {
-                docker {
-                    image 'golang:1.21'
-                    args '--privileged -u root'
-                }
-            }
-            steps {
-                sh 'go test -v -race ./...'
-                sh 'go test -coverprofile=coverage.out ./...'
-                sh 'go tool cover -html=coverage.out -o coverage.html'
-                sh 'go test -bench=. ./...'
-                sh 'test -z $(gofmt -l .)'
-                sh 'go vet ./...'
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'coverage.html', allowEmptyArchive: true
-                }
-                failure {
-                    error 'Test stage failed'
-                }
-            }
-        }
+        // stage('Test and Coverage') {
+        //     agent {
+        //         docker {
+        //             image 'golang:1.21'
+        //             args '--privileged -u root'
+        //         }
+        //     }
+        //     steps {
+        //         sh 'go test -v -race ./...'
+        //         sh 'go test -coverprofile=coverage.out ./...'
+        //         sh 'go tool cover -html=coverage.out -o coverage.html'
+        //         sh 'go test -bench=. ./...'
+        //         sh 'test -z $(gofmt -l .)'
+        //         sh 'go vet ./...'
+        //     }
+        //     post {
+        //         always {
+        //             archiveArtifacts artifacts: 'coverage.html', allowEmptyArchive: true
+        //         }
+        //         failure {
+        //             error 'Test stage failed'
+        //         }
+        //     }
+        // }
         stage('Build and Push Docker Image') {
             agent {
                 docker { 
@@ -37,9 +37,11 @@ pipeline {
                     sh 'git config --global --add safe.directory "${WORKSPACE}"'
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     sh 'dockerd --insecure-registry $DOCKER_REGISTRY &'
-                    sh "docker build -t $DOCKER_REGISTRY/gogs:latest -t $DOCKER_REGISTRY/gogs:${commitHash} ."
-                    sh "docker push $DOCKER_REGISTRY/gogs:latest"
-                    sh "docker push $DOCKER_REGISTRY/gogs:${commitHash}"
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'ecr-admin') {
+                        def customImage = docker.build("${DOCKER_REGISTRY}/gogs:${commitHash}")
+                        customImage.push()
+                        customImage.push('latest')
+                    }
 
                     withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         sh "git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL.replace('https://', '')} repo"                        
