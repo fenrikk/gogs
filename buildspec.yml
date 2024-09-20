@@ -1,10 +1,9 @@
 version: 0.2
-
 phases:
   install:
     commands:
       - apt-get update
-      - apt-get install -y docker.io
+      - apt-get install -y docker.io git
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -16,3 +15,14 @@ phases:
       - docker build -t gogs:$COMMIT_HASH .
       - docker tag gogs:$COMMIT_HASH $ECR_REPO:$COMMIT_HASH
       - docker push $ECR_REPO:$COMMIT_HASH
+  post_build:
+    commands:
+      - echo Updating Kubernetes deployment file...
+      - git clone https://github.com/fenrikk/gogs-kuber-deployment.git
+      - cd gogs-kuber-deployment
+      - sed -i "s|image: .*|image: $ECR_REPO:$COMMIT_HASH|" gogs-deployment-service.yaml
+      - git config --global user.email "codebuild@example.com"
+      - git config --global user.name "CodeBuild"
+      - git add gogs-deployment-service.yaml
+      - git commit -m "Update image to $COMMIT_HASH"
+      - git push https://$GITHUB_TOKEN@github.com/fenrikk/gogs-kuber-deployment.git
