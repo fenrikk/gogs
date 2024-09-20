@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - apt-get update
+      - apt-get install -y docker.io
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+  build:
+    commands:
+      - echo Building the Docker image...
+      - export COMMIT_HASH=$(git rev-parse --short HEAD)
+      - docker build -t gogs:$COMMIT_HASH .
+      - docker tag gogs:$COMMIT_HASH $ECR_REPO:$COMMIT_HASH
