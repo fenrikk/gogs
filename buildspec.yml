@@ -27,4 +27,4 @@ phases:
       - git config --global user.name "CodeBuild"
       - git add gogs-deployment-service.yaml
       - git commit -m "Update image to $COMMIT_HASH"
-      - git push https://$GITHUB_TOKEN@github.com/fenrikk/gogs-kuber-deployment.git
+      - git push https://oauth2:$GITHUB_TOKEN@github.com/fenrikk/gogs-kuber-deployment.git
