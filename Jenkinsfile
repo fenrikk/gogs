@@ -14,12 +14,7 @@ pipeline {
                     def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     sh 'dockerd &'
                     def customImage = docker.build("gogs:${commitHash}")
-                    sh '''
-                        apk add --no-cache \
-                        python3 \
-                        py3-pip \
-                        && pip3 install awscli
-                    '''
+                    sh 'apk add --no-cache aws-cli'
                     docker.withRegistry("https://${ECR_REPO}", "ecr:${AWS_REGION}:ecr-admin") {
                         customImage.push('latest')
                     }
