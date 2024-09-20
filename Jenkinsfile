@@ -48,7 +48,7 @@ pipeline {
                         sh "git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL.replace('https://', '')} repo"                        
                         dir('repo') {
                             sh "sed -i 's|image: ${ECR_REPO}:.*|image: ${ECR_REPO}:${commitHash}|' gogs-deployment-service.yaml"
-                            sh "git config user.email 'jenkins@jenkins.com'"
+                            sh "git config user.email 'jenkins@example.com'"
                             sh "git config user.name 'Jenkins'"
                             sh "git add gogs-deployment-service.yaml"
                             sh "git commit -m 'Update Gogs image to ${commitHash}'"
