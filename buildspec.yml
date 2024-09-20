@@ -8,6 +8,7 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+      - export GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id github-token --query SecretString --output text)
   build:
     commands:
       - echo Building the Docker image...
@@ -20,7 +21,8 @@ phases:
       - echo Updating Kubernetes deployment file...
       - git clone https://github.com/fenrikk/gogs-kuber-deployment.git
       - cd gogs-kuber-deployment
-      - sed -i "s|image: .*|image: $ECR_REPO:$COMMIT_HASH|" gogs-deployment-service.yaml
+      - |
+        sed -i "s|image: .*|image: $ECR_REPO:$COMMIT_HASH|" gogs-deployment-service.yaml
       - git config --global user.email "codebuild@example.com"
       - git config --global user.name "CodeBuild"
       - git add gogs-deployment-service.yaml
