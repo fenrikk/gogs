@@ -20,8 +20,3 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-
-artifacts:
-  files:
-    - gogs-binary
-  name: gogs-binary-$(date +%Y-%m-%d)
