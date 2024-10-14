@@ -4,9 +4,6 @@ phases:
   install:
     runtime-versions:
       golang: 1.x
-  pre_build:
-    commands:
-      - HASH_COMMIT=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
   build:
     commands:
       - echo Build started on `date`
@@ -14,10 +11,8 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - mv gogs gogs-$HASH_COMMIT
-      - echo "##vso[task.setvariable variable=HASH_COMMIT;isOutput=true]$HASH_COMMIT"
 
 artifacts:
   files:
-    - gogs-$HASH_COMMIT
-  name: gogs-$HASH_COMMIT
+    - gogs
+  name: gogs
