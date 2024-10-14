@@ -1,9 +1,13 @@
 version: 0.2
 
+env:
+  variables:
+    HASH_COMMIT: ${CODEBUILD_RESOLVED_SOURCE_VERSION}
+
 phases:
   install:
     runtime-versions:
-      golang: 1.21
+      golang: 1.x
   build:
     commands:
       - echo Build started on `date`
@@ -11,10 +15,9 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - HASH_COMMIT=$(git rev-parse --short HEAD)
-      - mv gogs gogs-$HASH_COMMIT
+      - mv gogs gogs-${HASH_COMMIT:0:7}
 
 artifacts:
   files:
-    - gogs-$HASH_COMMIT
-  name: gogs-$HASH_COMMIT
+    - gogs-${HASH_COMMIT:0:7}
+  name: gogs-${HASH_COMMIT:0:7}
