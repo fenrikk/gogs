@@ -7,7 +7,7 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - go build -o gogs
+      - CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o gogs
   post_build:
     commands:
       - echo Build completed on `date`
