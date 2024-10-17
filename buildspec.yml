@@ -1,18 +1,15 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      golang: 1.x
   build:
     commands:
       - echo Build started on `date`
-      - go build -o gogs
+      - zip -r gogs.zip . -x "*.git*" "*.zip" 
   post_build:
     commands:
       - echo Build completed on `date`
 
 artifacts:
   files:
-    - gogs
-  name: gogs
+    - gogs.zip
+  name: gogs.zip
