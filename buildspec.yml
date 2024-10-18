@@ -4,12 +4,13 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - zip -r gogs.zip . -x "*.git*" "*.zip" 
+      - export COMMIT_HASH=$(git rev-parse --short=7 HEAD)
+      - zip -r gogs-${COMMIT_HASH}.zip . -x "*.git*" "*.zip" 
   post_build:
     commands:
       - echo Build completed on `date`
 
 artifacts:
   files:
-    - gogs.zip
-  name: gogs.zip
+    - gogs-*.zip
+  name: gogs-${COMMIT_HASH}.zip
